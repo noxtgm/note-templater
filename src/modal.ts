@@ -550,6 +550,8 @@ export class NoteCreatorModal extends Modal {
 	private async applyFrontmatter(file: TFile): Promise<void> {
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
 			for (const field of this.frontmatterFields) {
+				const isEmptyOmit = (field.type === "text" || !field.type || field.type === "date" || field.type === "datetime") && !field.value;
+				if (isEmptyOmit) continue;
 				frontmatter[field.key] = this.toFrontmatterValue(field.value, field.type);
 			}
 		});
@@ -577,7 +579,8 @@ export class NoteCreatorModal extends Modal {
 
 		const lines: string[] = ["---"];
 		for (const entry of entries) {
-			lines.push(this.formatFrontmatterLine(entry.key, entry.value, entry.type));
+			const line = this.formatFrontmatterLine(entry.key, entry.value, entry.type);
+			if (line) lines.push(line);
 		}
 		lines.push("---");
 		lines.push("");
@@ -606,8 +609,10 @@ export class NoteCreatorModal extends Modal {
 			}
 			case "date":
 			case "datetime":
+				if (!value) return "";
 				return `${key}: ${value}`;
 			default:
+				if (!value) return "";
 				return `${key}: ${this.formatYamlValue(value)}`;
 		}
 	}
@@ -618,15 +623,13 @@ export class NoteCreatorModal extends Modal {
 	}
 
 	private formatYamlValue(value: string): string {
-		if (!value) return '""';
+		if (!value) return "";
 		if (
 			value.includes(":") ||
 			value.includes("#") ||
 			value.includes("'") ||
 			value.includes('"') ||
-			value.includes("\n") ||
-			value.startsWith(" ") ||
-			value.endsWith(" ")
+			value.includes("\n")
 		) {
 			return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 		}
