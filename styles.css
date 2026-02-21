@@ -29,6 +29,18 @@
 	padding-bottom: 0.25em !important;
 	margin-top: 0 !important;
 	margin-bottom: 0.5em !important;
+	display: grid !important;
+	grid-template-columns: minmax(120px, auto) 1fr;
+	align-items: center;
+	gap: 12px;
+}
+
+.note-fields-container > .setting-item .setting-item-info {
+	min-width: 0;
+}
+
+.note-fields-container > .setting-item .setting-item-control {
+	min-width: 0;
 }
 
 .note-fields-container > .setting-item:last-child {
