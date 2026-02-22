@@ -1,4 +1,4 @@
-import { Plugin, setIcon } from "obsidian";
+import { Plugin, Platform, setIcon } from "obsidian";
 import type { NoteCreatorSettings } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 import { NoteCreatorSettingTab } from "./settings";
@@ -31,6 +31,8 @@ export default class NoteCreatorPlugin extends Plugin {
 	}
 
 	private addSidebarButton(): void {
+		if (!Platform.isDesktopApp) return;
+
 		const leftSplit = (this.app.workspace as WorkspaceWithLeftSplit).leftSplit;
 		if (!leftSplit?.containerEl) return;
 
