@@ -6,8 +6,8 @@ import {
 	TFolder,
 	TFile,
 } from "obsidian";
-import type NoteCreatorPlugin from "./main";
-import type { NoteType } from "./types";
+import type NoteTemplaterPlugin from "./main";
+import type { NoteTemplate } from "./types";
 import { TextInputSuggest } from "./suggest";
 
 const CUSTOM_TYPE_VALUE = "__custom__";
@@ -71,10 +71,6 @@ class ModalFolderSuggest extends TextInputSuggest<TFolder> {
 	}
 }
 
-/**
- * Suggests existing frontmatter values from other notes in the vault,
- * matching Obsidian's native frontmatter autocomplete behavior.
- */
 class FrontmatterValueSuggest extends TextInputSuggest<string> {
 	private getKey: () => string;
 
@@ -147,8 +143,8 @@ type TemplaterPlugin = {
 	};
 };
 
-export class NoteCreatorModal extends Modal {
-	private plugin: NoteCreatorPlugin;
+export class NoteTemplaterModal extends Modal {
+	private plugin: NoteTemplaterPlugin;
 	private noteName = "";
 	private selectedTypeId = "";
 	private frontmatterFields: FrontmatterField[] = [];
@@ -158,7 +154,7 @@ export class NoteCreatorModal extends Modal {
 	private actionsContainer: HTMLElement | null = null;
 	private refreshCustomProperties: (() => void) | null = null;
 
-	constructor(app: App, plugin: NoteCreatorPlugin) {
+	constructor(app: App, plugin: NoteTemplaterPlugin) {
 		super(app);
 		this.plugin = plugin;
 	}
@@ -184,7 +180,7 @@ export class NoteCreatorModal extends Modal {
 
 		new Setting(noteSection)
 			.setName("Name")
-			.setDesc("The name for the new note")
+			.setDesc("The name for the new note.")
 			.addText((text) => {
 				text.setPlaceholder("Enter a name")
 					.onChange((value) => {
@@ -193,14 +189,16 @@ export class NoteCreatorModal extends Modal {
 			});
 
 		const typeOptions: Record<string, string> = {};
-		for (const noteType of this.plugin.settings.types) {
-			typeOptions[noteType.id] = noteType.name || "(unnamed type)";
+		for (const template of this.plugin.settings.templates) {
+			typeOptions[template.id] = template.name || "(unnamed template)";
 		}
-		typeOptions[CUSTOM_TYPE_VALUE] = "Custom...";
+		if (this.plugin.settings.enableCustomTemplates) {
+			typeOptions[CUSTOM_TYPE_VALUE] = "Custom...";
+		}
 
 		const typeSetting = new Setting(noteSection)
 			.setName("Template")
-			.setDesc("The existing or custom template for the new note")
+			.setDesc("The existing or custom template for the new note.")
 			.addDropdown((dropdown) => {
 				dropdown.addOption("", "-- Select a template --");
 				for (const [key, label] of Object.entries(typeOptions)) {
@@ -227,7 +225,7 @@ export class NoteCreatorModal extends Modal {
 			new Setting(this.actionsContainer)
 				.addButton((button) => {
 					button
-						.setButtonText("Add Property")
+						.setButtonText("Add property")
 						.onClick(() => {
 							this.customProperties.push({ key: "", value: "", type: "text" });
 							this.refreshCustomProperties?.();
@@ -235,15 +233,15 @@ export class NoteCreatorModal extends Modal {
 				})
 				.addButton((button) => {
 					button
-						.setButtonText("Create")
+						.setButtonText("Create new note")
 						.setCta()
 						.onClick(() => void this.createNote());
 				});
-		} else {
+		} else if (this.selectedTypeId) {
 			new Setting(this.actionsContainer)
 				.addButton((button) => {
 					button
-						.setButtonText("Create")
+						.setButtonText("Create new note")
 						.setCta()
 						.onClick(() => void this.createNote());
 				});
@@ -268,12 +266,12 @@ export class NoteCreatorModal extends Modal {
 			return;
 		}
 
-		const noteType = this.plugin.settings.types.find(
+		const noteTemplate = this.plugin.settings.templates.find(
 			(t) => t.id === this.selectedTypeId
 		);
-		if (!noteType) return;
+		if (!noteTemplate) return;
 
-		const templateFields = await this.parseTemplateFrontmatter(noteType.templatePath);
+		const templateFields = await this.parseTemplateFrontmatter(noteTemplate.templatePath);
 		if (templateFields.length === 0) {
 			this.fieldsContainer.createEl("p", {
 				text: "No frontmatter properties found in the template file.",
@@ -321,7 +319,7 @@ export class NoteCreatorModal extends Modal {
 
 		const destFolderSetting = new Setting(this.fieldsContainer)
 			.setName("Destination Folder")
-			.setDesc("The folder where to create the new note")
+			.setDesc("The folder where to create the new note.")
 			.addSearch((search) => {
 				new ModalFolderSuggest(this.app, search.inputEl);
 				search.setPlaceholder("path/to/folder")
@@ -495,7 +493,7 @@ export class NoteCreatorModal extends Modal {
 
 	private async createCustomNote(): Promise<void> {
 		if (!this.customDestinationFolder.trim()) {
-			new Notice("Please specify a destination folder for the new note.");
+			new Notice("Please enter a destination folder for the new note.");
 			return;
 		}
 
@@ -524,15 +522,15 @@ export class NoteCreatorModal extends Modal {
 	}
 
 	private async createPredefinedNote(): Promise<void> {
-		const noteType = this.plugin.settings.types.find(
+		const noteTemplate = this.plugin.settings.templates.find(
 			(t) => t.id === this.selectedTypeId
 		);
-		if (!noteType) {
-			new Notice("Selected type not found.");
+		if (!noteTemplate) {
+			new Notice("Selected template not found.");
 			return;
 		}
 
-		const destinationFolder = noteType.destinationFolder;
+		const destinationFolder = noteTemplate.destinationFolder;
 		const filePath = `${destinationFolder}/${this.noteName.trim()}.md`;
 
 		const existingFile = this.app.vault.getAbstractFileByPath(filePath);
@@ -544,7 +542,7 @@ export class NoteCreatorModal extends Modal {
 		await this.ensureFolderExists(destinationFolder);
 
 		const templaterPlugin = this.getTemplaterPlugin();
-		const templateFile = this.app.vault.getAbstractFileByPath(noteType.templatePath);
+		const templateFile = this.app.vault.getAbstractFileByPath(noteTemplate.templatePath);
 
 		if (templaterPlugin && templateFile instanceof TFile) {
 			try {

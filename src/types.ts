@@ -1,14 +1,16 @@
-export interface NoteType {
+export interface NoteTemplate {
 	id: string;
 	name: string;
 	templatePath: string;
 	destinationFolder: string;
 }
 
-export interface NoteCreatorSettings {
-	types: NoteType[];
+export interface NoteTemplaterSettings {
+	enableCustomTemplates: boolean;
+	templates: NoteTemplate[];
 }
 
-export const DEFAULT_SETTINGS: NoteCreatorSettings = {
-	types: [],
+export const DEFAULT_SETTINGS: NoteTemplaterSettings = {
+	enableCustomTemplates: false,
+	templates: [],
 };

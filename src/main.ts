@@ -1,11 +1,11 @@
 import { Plugin, Platform, setIcon } from "obsidian";
-import type { NoteCreatorSettings } from "./types";
+import type { NoteTemplaterSettings } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
-import { NoteCreatorSettingTab } from "./settings";
-import { NoteCreatorModal } from "./modal";
+import { NoteTemplaterSettingTab } from "./settings";
+import { NoteTemplaterModal } from "./modal";
 
-export default class NoteCreatorPlugin extends Plugin {
-	settings: NoteCreatorSettings = { ...DEFAULT_SETTINGS };
+export default class NoteTemplaterPlugin extends Plugin {
+	settings: NoteTemplaterSettings = { ...DEFAULT_SETTINGS };
 	private sidebarButtonEl: HTMLElement | null = null;
 
 	async onload(): Promise<void> {
@@ -19,11 +19,11 @@ export default class NoteCreatorPlugin extends Plugin {
 			id: "open-quasar-templater",
 			name: "Create new note",
 			callback: () => {
-				new NoteCreatorModal(this.app, this).open();
+				new NoteTemplaterModal(this.app, this).open();
 			},
 		});
 
-		this.addSettingTab(new NoteCreatorSettingTab(this.app, this));
+		this.addSettingTab(new NoteTemplaterSettingTab(this.app, this));
 	}
 
 	onunload(): void {
@@ -50,7 +50,7 @@ export default class NoteCreatorPlugin extends Plugin {
 		setIcon(iconEl, "sticky-note");
 
 		tabHeader.addEventListener("click", () => {
-			new NoteCreatorModal(this.app, this).open();
+			new NoteTemplaterModal(this.app, this).open();
 		});
 
 		tabContainer.appendChild(tabHeader);

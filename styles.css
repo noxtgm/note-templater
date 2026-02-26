@@ -2,6 +2,11 @@
 	padding: 1em;
 }
 
+.modal:has(.note-creator-modal) .modal-close-button {
+	top: 6px;
+	right: 6px;
+}
+
 .note-creator-modal h2 {
 	margin-top: 0;
 	margin-bottom: 1em;
@@ -130,6 +135,7 @@
 	padding: 4px 8px;
 }
 
+.note-settings-list,
 .note-type-list {
 	border-top: 1px solid var(--background-modifier-border);
 	margin-top: 0.75em;
@@ -167,4 +173,14 @@
 
 .note-type-search {
 	width: calc(100% - 20px);
+}
+
+.note-type-name {
+	flex: 0.6 1 0 !important;
+	min-width: 0;
+}
+
+.note-type-path {
+	flex: 1 1 0 !important;
+	min-width: 0;
 }
