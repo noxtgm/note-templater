@@ -1,4 +1,4 @@
-<p align="center"><img width="100%" src="[https://i.imgur.com/Vl3giic.png](https://github.com/noxtgm/note-templater/blob/master/demo.gif)"></p>
+![](https://github.com/noxtgm/note-templater/blob/master/demo.gif)
 
 # Note Templater
 
